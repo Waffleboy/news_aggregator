@@ -14,6 +14,18 @@ import news_api
 # Enable logging
 logger = logger_settings.setupLogger().getLogger(__name__)
 
+
+#==============================================================================
+# SETTINGS
+#==============================================================================
+# if True, when bot begins for the first time, itll get all the news for the
+# past month.
+RUN_ONE_TIME_AGGREGATION = True
+CHANNEL_ID = "@neatnews"
+#==============================================================================
+
+
+
 START_MSG = """
     Hi, I aggregate news about NEA.
     
@@ -42,24 +54,44 @@ def refresh(bot,update):
 
 def daily_news(bot, job):
     text = obtain_news()
-    text_fluff = add_fluff_to_news_string(text)
-    bot.send_message(chat_id='@neatnews', 
-                      text=text_fluff)
+    send_news_to_channel(bot,text)
+                      
 
-
+def monthly_news(bot,job):
+    text = obtain_news(date_range=_month_ago_date())
+    send_news_to_channel(bot,text)
+    
 #==============================================================================
 #                               Helper Funcs
 #==============================================================================
+
+def send_news_to_channel(bot,text):
+    global CHANNEL_ID
+    text_fluff = add_fluff_to_news_string(text)
+    bot.send_message(chat_id=CHANNEL_ID,text=text_fluff)
+    return
+
+def _yesterday_date():
+    yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    return yesterday_str
+
+def _month_ago_date():
+    month_ago = datetime.datetime.today() - datetime.timedelta(days=30)
+    month_ago_str = month_ago.strftime('%Y-%m-%d')
+    return month_ago_str
+
+## main api call
+def obtain_news(query = "NEA Singapore",date_range = _yesterday_date()):
+    news = news_api.query_api(query,date_range)
+    news_str = format_news_api_results(news)
+    return news_str
+
 
 def add_fluff_to_news_string(news_str):
     date = datetime.date.today().strftime('%d %b %Y')
     fluff = "NEA News for {}:\n\n".format(date)
     return fluff + news_str
-
-def obtain_news(query = "NEA Singapore"):
-    news = news_api.query_api(query)
-    news_str = format_news_api_results(news)
-    return news_str
 
 def format_news_api_results(res):
     s = ''
@@ -98,6 +130,7 @@ def getUpdater():
 #==============================================================================
     
 def main():
+    global CHANNEL_ID
     logger.info("Starting NEAWs Bot")
     # Create the EventHandler and pass it your bot's token.
     updater = getUpdater()
@@ -122,6 +155,9 @@ def main():
     # Start the Bot
     updater.start_polling()
     
+    if RUN_ONE_TIME_AGGREGATION:
+        updater.bot.send_message(CHANNEL_ID,"Aggregation set to ON: Beginning one-time monthly news collation.\n")
+        j.run_once(monthly_news,1)
     news_job = j.run_repeating(daily_news, interval=60*60*24, first=0)
 
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,

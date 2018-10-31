@@ -7,20 +7,12 @@ Created on Tue Oct 30 23:31:38 2018
 """
 
 from newsapi import NewsApiClient
-import datetime
 import os
 
 # Init
 newsapi = NewsApiClient(api_key=os.environ["GOOGLE_NEWS"])
 
-def _yesterday_date():
-    yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
-    yesterday_str = yesterday.strftime('%Y-%m-%d')
-    return yesterday_str
-
-
-
-def query_api(query_str,date_range = _yesterday_date()):
+def query_api(query_str,date_range = None):
     if date_range:
         news = newsapi.get_everything(q=query_str,
                                       language='en',
