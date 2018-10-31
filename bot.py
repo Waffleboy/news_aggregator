@@ -9,6 +9,7 @@ Created on Tue Oct 30 23:53:31 2018
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import os
 import logger_settings
+import datetime
 import news_api
 # Enable logging
 logger = logger_settings.setupLogger().getLogger(__name__)
@@ -41,18 +42,24 @@ def refresh(bot,update):
 
 def daily_news(bot, job):
     text = obtain_news()
+    text_fluff = add_fluff_to_news_string(text)
     bot.send_message(chat_id='@neatnews', 
-                      text=text)
+                      text=text_fluff)
 
 
 #==============================================================================
 #                               Helper Funcs
 #==============================================================================
 
+def add_fluff_to_news_string(news_str):
+    date = datetime.date.today().strftime('%d %b %Y')
+    fluff = "NEA News for {}:\n\n".format(date)
+    return fluff + news_str
+
 def obtain_news(query = "NEA Singapore"):
     news = news_api.query_api(query)
-    res = format_news_api_results(news)
-    return res
+    news_str = format_news_api_results(news)
+    return news_str
 
 def format_news_api_results(res):
     s = ''
