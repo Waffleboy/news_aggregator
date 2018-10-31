@@ -40,8 +40,9 @@ def refresh(bot,update):
 #==============================================================================
 
 def daily_news(bot, job):
+    text = obtain_news()
     bot.send_message(chat_id='@neatnews', 
-                      text=obtain_news())
+                      text=text)
 
 
 #==============================================================================
