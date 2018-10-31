@@ -59,7 +59,7 @@ def daily_news(bot, job):
 
 def monthly_news(bot,job):
     text = obtain_news(date_range=_month_ago_date())
-    send_news_to_channel(bot,text)
+    send_news_to_channel(bot,text,monthly=True)
     
 #==============================================================================
 #                               Helper Funcs
