@@ -22,18 +22,17 @@ logger = logger_settings.setupLogger().getLogger(__name__)
 # past month.
 RUN_ONE_TIME_AGGREGATION = True
 CHANNEL_ID = "@neatnews"
+
 #==============================================================================
-
-
+#                               SLASH COMMANDS
+#==============================================================================
 
 START_MSG = """
     Hi, I aggregate news about NEA.
     
     /refresh - fetches latest (24hr) news
 """
-#==============================================================================
-#                               SLASH COMMANDS
-#==============================================================================
+
 def helpme(bot, update):
     update.message.reply_text(getHelpText())
 
@@ -49,7 +48,7 @@ def refresh(bot,update):
     return
 
 #==============================================================================
-#                           Recurring queues
+#                           Recurring jobs
 #==============================================================================
 
 def daily_news(bot, job):
@@ -65,6 +64,19 @@ def monthly_news(bot,job):
 #                               Helper Funcs
 #==============================================================================
 
+## main api call for news. 
+# date_range: <str> date format YYYY-MM-DD or 'yesterday' or None
+def obtain_news(query = "NEA Singapore",date_range = 'yesterday',\
+                format_str = True):
+    
+    if date_range == 'yesterday': #convert for auto processing
+        date_range = _yesterday_date()
+    news = news_api.query_api(query,date_range)
+    if format_str:
+        return format_news_api_results(news)
+    return news
+
+# takes in text and formats it correctly to send to telegram channel
 def send_news_to_channel(bot,text,monthly = False):
     global CHANNEL_ID
     text_fluff = add_fluff_to_news_string(text,monthly)
@@ -75,6 +87,7 @@ def send_news_to_channel(bot,text,monthly = False):
         bot.send_message(chat_id=CHANNEL_ID,text=restored_text)
     return
 
+
 def _yesterday_date():
     yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
     yesterday_str = yesterday.strftime('%Y-%m-%d')
@@ -84,15 +97,6 @@ def _month_ago_date():
     month_ago = datetime.datetime.today() - datetime.timedelta(days=30)
     month_ago_str = month_ago.strftime('%Y-%m-%d')
     return month_ago_str
-
-## main api call
-def obtain_news(query = "NEA Singapore",date_range = _yesterday_date(),\
-                format_str = True):
-    news = news_api.query_api(query,date_range)
-    if format_str:
-        return format_news_api_results(news)
-    return news
-
 
 def add_fluff_to_news_string(news_str,monthly):
     date = datetime.date.today().strftime('%d %b %Y')
