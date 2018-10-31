@@ -65,10 +65,14 @@ def monthly_news(bot,job):
 #                               Helper Funcs
 #==============================================================================
 
-def send_news_to_channel(bot,text):
+def send_news_to_channel(bot,text,monthly = False):
     global CHANNEL_ID
-    text_fluff = add_fluff_to_news_string(text)
-    bot.send_message(chat_id=CHANNEL_ID,text=text_fluff)
+    text_fluff = add_fluff_to_news_string(text,monthly)
+    ## HACK: Fix too long message length
+    text_chunks = message_length_fixer(text_fluff)
+    for chunk in text_chunks:
+        restored_text = '\n\n'.join(chunk)
+        bot.send_message(chat_id=CHANNEL_ID,text=restored_text)
     return
 
 def _yesterday_date():
@@ -82,15 +86,20 @@ def _month_ago_date():
     return month_ago_str
 
 ## main api call
-def obtain_news(query = "NEA Singapore",date_range = _yesterday_date()):
+def obtain_news(query = "NEA Singapore",date_range = _yesterday_date(),\
+                format_str = True):
     news = news_api.query_api(query,date_range)
-    news_str = format_news_api_results(news)
-    return news_str
+    if format_str:
+        return format_news_api_results(news)
+    return news
 
 
-def add_fluff_to_news_string(news_str):
+def add_fluff_to_news_string(news_str,monthly):
     date = datetime.date.today().strftime('%d %b %Y')
-    fluff = "NEA News for {}:\n\n".format(date)
+    if monthly:
+        fluff = "NEA News for the last 30 days:\n\n"
+    else:
+        fluff = "NEA News for {}:\n\n".format(date)
     return fluff + news_str
 
 def format_news_api_results(res):
@@ -102,6 +111,17 @@ def format_news_api_results(res):
 
 def getHelpText():
     return START_MSG
+
+def message_length_fixer(text):
+    # split every 10 messages.
+    text_split = text.split('\n\n')
+    text_chunks = list(chunks(text_split,10))
+    return text_chunks
+    
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
     
 #==============================================================================
 #                                   Misc
@@ -157,7 +177,7 @@ def main():
     
     if RUN_ONE_TIME_AGGREGATION:
         updater.bot.send_message(CHANNEL_ID,"Aggregation set to ON: Beginning one-time monthly news collation.\n")
-        j.run_once(monthly_news,1)
+        j.run_once(monthly_news,0)
     news_job = j.run_repeating(daily_news, interval=60*60*24, first=0)
 
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
