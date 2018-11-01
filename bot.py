@@ -20,7 +20,7 @@ logger = logger_settings.setupLogger().getLogger(__name__)
 #==============================================================================
 # if True, when bot begins for the first time, itll get all the news for the
 # past month.
-RUN_ONE_TIME_AGGREGATION = True
+RUN_ONE_TIME_AGGREGATION = False
 CHANNEL_ID = "@neatnews"
 
 #==============================================================================
