@@ -82,6 +82,9 @@ def send_news_to_channel(bot,text,monthly = False):
     text_fluff = add_fluff_to_news_string(text,monthly)
     ## HACK: Fix too long message length
     text_chunks = message_length_fixer(text_fluff)
+    if len(text_chunks) == 0:
+        bot.send_message(chat_id=CHANNEL_ID,text="No news in the last 24 hours.")
+        return
     for chunk in text_chunks:
         restored_text = '\n\n'.join(chunk)
         bot.send_message(chat_id=CHANNEL_ID,text=restored_text)
