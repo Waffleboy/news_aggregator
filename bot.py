@@ -44,6 +44,11 @@ def start(bot, update):
 
 def refresh(bot,update):
     res = obtain_news()
+    text_fluff = add_fluff_to_news_string(res,False)
+    if res == '':
+        text_fluff += "No news in the last 24 hours."
+        update.message.reply_text(text_fluff)
+        return
     update.message.reply_text(res)
     return
 
