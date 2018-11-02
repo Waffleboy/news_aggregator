@@ -28,9 +28,12 @@ CHANNEL_ID = "@neatnews"
 #==============================================================================
 
 START_MSG = """
-    Hi, I aggregate news about NEA.
+Hi, I aggregate news about NEA.
     
-    /refresh - fetches latest (24hr) news
+/refresh - fetches latest (24hr) news
+/help - get this menu
+
+For issues, contact @waffleboy
 """
 
 def helpme(bot, update):
