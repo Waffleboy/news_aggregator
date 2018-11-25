@@ -99,7 +99,8 @@ def obtain_nea_press_release():
 def send_press_release(bot,press_release_tup):
     global CHANNEL_ID
     title, date, url = press_release_tup
-    text = "NEA Press Release for {}\n\n".format(date)
+    date_formatted = date.strftime('%d %b %Y')
+    text = "NEA Press Release for {}\n\n".format(date_formatted)
     text += title + '\n' + url
     bot.send_message(chat_id=CHANNEL_ID,text=text)
     return
