@@ -11,6 +11,7 @@ import os
 import logger_settings
 import datetime
 import news_api
+import nea_scraper
 # Enable logging
 logger = logger_settings.setupLogger().getLogger(__name__)
 
@@ -60,8 +61,12 @@ def refresh(bot,update):
 #==============================================================================
 
 def daily_news(bot, job):
+    press_release_tup = obtain_nea_press_release()
+    if press_release_tup:
+        send_press_release(bot,press_release_tup)
     text = obtain_news()
     send_news_to_channel(bot,text)
+    
                       
 
 def monthly_news(bot,job):
@@ -84,6 +89,23 @@ def obtain_news(query = "NEA Singapore",date_range = 'yesterday',\
         return format_news_api_results(news)
     return news
 
+
+def obtain_nea_press_release():
+    res = nea_scraper.scraper()
+    if res:
+        return res
+    return
+
+def send_press_release(bot,press_release_tup):
+    global CHANNEL_ID
+    title, date, url = press_release_tup
+    text = "NEA Press Release for {}\n\n".format(date)
+    text += title + '\n' + url
+    bot.send_message(chat_id=CHANNEL_ID,text=text)
+    return
+    
+
+## to be abstracted out
 # takes in text and formats it correctly to send to telegram channel
 def send_news_to_channel(bot,text,monthly = False):
     global CHANNEL_ID
