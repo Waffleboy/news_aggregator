@@ -61,7 +61,14 @@ def refresh(bot,update):
 #==============================================================================
 
 def daily_news(bot, job):
-    press_release_tup = obtain_nea_press_release()
+    press_release_tup = None #hack
+    try:
+        press_release_tup = obtain_nea_press_release()
+    except Exception as e:
+        # TODO: proper handling
+        print("NEA press release scrape error")
+        print(e)
+        
     if press_release_tup:
         send_press_release(bot,press_release_tup)
     text = obtain_news()
