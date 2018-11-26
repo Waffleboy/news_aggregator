@@ -72,7 +72,6 @@ def daily_news(bot, job):
 def monthly_news(bot,job):
     text = obtain_news(date_range=_month_ago_date())
     send_news_to_channel(bot,text,monthly=True)
-    
 #==============================================================================
 #                               Helper Funcs
 #==============================================================================
@@ -91,7 +90,7 @@ def obtain_news(query = "NEA Singapore",date_range = 'yesterday',\
 
 
 def obtain_nea_press_release():
-    res = nea_scraper.scraper()
+    res = nea_scraper.scrape()
     if res:
         return res
     return
