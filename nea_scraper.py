@@ -60,5 +60,5 @@ def should_scrape(article_date,given_date):
 def parse_date_and_identify(text):
     date_filtered = text.split('\n')[1] # second element
     parsed_date = datetime.datetime.strptime(date_filtered,'%d %b %Y')
-    return parsed_date
+    return parsed_date.date()
     

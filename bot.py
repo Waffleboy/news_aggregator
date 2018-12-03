@@ -96,8 +96,8 @@ def obtain_news(query = "NEA Singapore",date_range = 'yesterday',\
     return news
 
 
-def obtain_nea_press_release():
-    res = nea_scraper.scrape()
+def obtain_nea_press_release(given_date = None,override = False):
+    res = nea_scraper.scrape(given_date=given_date,override=override)
     if res:
         return res
     return
