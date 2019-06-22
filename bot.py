@@ -56,11 +56,17 @@ def refresh(bot,update):
     update.message.reply_text(res)
     return
 
+def get_daily_news(bot,update):
+    daily_news(bot)
+    
 #==============================================================================
 #                           Recurring jobs
 #==============================================================================
 
-def daily_news(bot, job):
+def daily_news_job(bot,job):
+    daily_news(bot)
+
+def daily_news(bot):
     press_release_tup = None #hack
     try:
         press_release_tup = obtain_nea_press_release()
@@ -74,7 +80,6 @@ def daily_news(bot, job):
     text = obtain_news()
     send_news_to_channel(bot,text)
     
-                      
 
 def monthly_news(bot,job):
     text = obtain_news(date_range=_month_ago_date())
@@ -207,6 +212,7 @@ def main():
     dp.add_handler(CommandHandler("help", helpme))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("refresh", refresh))
+    dp.add_handler(CommandHandler("news",get_daily_news))
     
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, standardReply()))
@@ -223,7 +229,7 @@ def main():
     if RUN_ONE_TIME_AGGREGATION:
         updater.bot.send_message(CHANNEL_ID,"Aggregation set to ON: Beginning one-time monthly news collation.\n")
         j.run_once(monthly_news,0)
-    news_job = j.run_daily(daily_news, time = datetime.time(23))
+    news_job = j.run_daily(daily_news_job, time = datetime.time(23))
 
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since

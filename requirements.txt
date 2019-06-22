@@ -1,2 +1,6 @@
-newsapi-python
-python-telegram-bot
+selenium==3.11.0
+newsapi_python==0.2.3
+python_telegram_bot==9.0.0
+pandas==0.23.3
+newsapi==0.1.1
+telegram==0.0.1
