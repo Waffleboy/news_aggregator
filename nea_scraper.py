@@ -19,8 +19,7 @@ from selenium.webdriver.chrome.options import Options
 chrome_options = Options()  
 chrome_options.add_argument("--headless")  
 
-default_url = "https://www.nea.gov.sg/media/releases"
-
+default_url = "https://www.nea.gov.sg/media/news"
 
 def scrape(url = default_url, given_date = None, override = False):
     driver = load_driver()

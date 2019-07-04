@@ -31,7 +31,7 @@ CHANNEL_ID = "@neatnews"
 START_MSG = """
 Hi, I aggregate news about NEA.
     
-/refresh - fetches latest (24hr) news
+/news - fetches latest (24hr) news
 /help - get this menu
 
 For issues, contact @waffleboy
@@ -46,41 +46,23 @@ def error(bot, update, error):
 def start(bot, update):
     update.message.reply_text(START_MSG)
 
-def refresh(bot,update):
-    res = obtain_news()
-    text_fluff = add_fluff_to_news_string(res,False)
-    if res == '':
-        text_fluff += "No news in the last 24 hours."
-        update.message.reply_text(text_fluff)
-        return
-    update.message.reply_text(res)
+def news(bot,update):
+    text, press_release = get_daily_news_and_press()
+    update.message.reply_text(text)
+    if press_release:
+        update.message.reply_text(press_release)
     return
-
-def get_daily_news(bot,update):
-    daily_news(bot)
     
 #==============================================================================
 #                           Recurring jobs
 #==============================================================================
 
-def daily_news_job(bot,job):
-    daily_news(bot)
-
-def daily_news(bot):
-    press_release_tup = None #hack
-    try:
-        press_release_tup = obtain_nea_press_release()
-    except Exception as e:
-        # TODO: proper handling
-        print("NEA press release scrape error")
-        print(e)
-        
-    if press_release_tup:
-        send_press_release(bot,press_release_tup)
-    text = obtain_news()
+def send_daily_news_to_channel(bot,job):
+    text, press_release = get_daily_news_and_press()
+    if press_release:
+        send_press_release_to_channel(bot,press_release)
     send_news_to_channel(bot,text)
     
-
 def monthly_news(bot,job):
     text = obtain_news(date_range=_month_ago_date())
     send_news_to_channel(bot,text,monthly=True)
@@ -101,38 +83,50 @@ def obtain_news(query = "NEA Singapore",date_range = 'yesterday',\
     return news
 
 
-def obtain_nea_press_release(given_date = None,override = False):
-    res = nea_scraper.scrape(given_date=given_date,override=override)
-    if res:
-        return res
-    return
-
-def send_press_release(bot,press_release_tup):
-    global CHANNEL_ID
-    title, date, url = press_release_tup
-    date_formatted = date.strftime('%d %b %Y')
-    text = "NEA Press Release for {}\n\n".format(date_formatted)
-    text += title + '\n' + url
-    bot.send_message(chat_id=CHANNEL_ID,text=text)
-    return
-    
-
-## to be abstracted out
-# takes in text and formats it correctly to send to telegram channel
-def send_news_to_channel(bot,text,monthly = False):
-    global CHANNEL_ID
+def get_daily_news_and_press(monthly = False):
+    press_release_tup = None #hack
+    try:
+        press_release_tup = obtain_nea_press_release()
+    except Exception as e:
+        # TODO: proper handling
+        print("NEA press release scrape error")
+        print(e)
+        
+    text = obtain_news()
     text_fluff = add_fluff_to_news_string(text,monthly)
     if text == '':
         text_fluff += "No news in the last 24 hours."
-        bot.send_message(chat_id=CHANNEL_ID,text=text_fluff)
-        return
+    
+    return text_fluff, press_release_tup
+
+
+def obtain_nea_press_release(given_date = None,override = False,format_res = True):
+    res = nea_scraper.scrape(given_date=given_date,override=override)
+    if res:
+        if format_res:
+            res = format_press_results(res)
+        return res
+    return
+
+
+# takes in text and formats it correctly to send to telegram channel
+def send_news_to_channel(bot,text,channel_id = None):
+    if channel_id == None:
+        global CHANNEL_ID
+        channel_id = CHANNEL_ID
     ## HACK: Fix too long message length
-    text_chunks = message_length_fixer(text_fluff)
+    text_chunks = message_length_fixer(text)
     for chunk in text_chunks:
         restored_text = '\n\n'.join(chunk)
         bot.send_message(chat_id=CHANNEL_ID,text=restored_text)
     return
 
+def send_press_release_to_channel(bot,press_release,channel_id = None):
+    if channel_id == None:
+        global CHANNEL_ID
+        channel_id = CHANNEL_ID
+    bot.send_message(chat_id=CHANNEL_ID,text=press_release)
+    return
 
 def _yesterday_date():
     yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
@@ -151,6 +145,14 @@ def add_fluff_to_news_string(news_str,monthly):
     else:
         fluff = "NEA News for {}:\n\n".format(date)
     return fluff + news_str
+
+def format_press_results(press_release_tup):
+    title, date, url = press_release_tup
+    date_formatted = date.strftime('%d %b %Y')
+    text = "NEA Press Release for {}\n\n".format(date_formatted)
+    text += title + '\n' + url
+    return text
+
 
 def format_news_api_results(res):
     s = ''
@@ -211,8 +213,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("help", helpme))
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("refresh", refresh))
-    dp.add_handler(CommandHandler("news",get_daily_news))
+    dp.add_handler(CommandHandler("news", news))
     
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, standardReply()))
@@ -229,7 +230,7 @@ def main():
     if RUN_ONE_TIME_AGGREGATION:
         updater.bot.send_message(CHANNEL_ID,"Aggregation set to ON: Beginning one-time monthly news collation.\n")
         j.run_once(monthly_news,0)
-    news_job = j.run_daily(daily_news_job, time = datetime.time(23))
+    news_job = j.run_daily(send_daily_news_to_channel, time = datetime.time(0))
 
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
