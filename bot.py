@@ -32,6 +32,7 @@ START_MSG = """
 Hi, I aggregate news about NEA.
     
 /news - fetches latest (24hr) news
+/press - get NEA press releases only
 /help - get this menu
 
 For issues, contact @waffleboy
@@ -52,7 +53,33 @@ def news(bot,update):
     if press_release:
         update.message.reply_text(press_release)
     return
-    
+
+def press_only(bot,update):
+    text, press_release = get_daily_news_and_press()
+    if press_release:
+        update.message.reply_text(press_release)
+        return
+    update.message.reply_text("No latest press release found")
+
+## TODO: REFACTOR BELOW
+def press_channel(bot,update):
+    if update.effective_user.id == 113756492: #auth check
+        text, press_release = get_daily_news_and_press()
+        if press_release:
+            send_press_release_to_channel(bot,press_release)
+        return
+    update.message.reply_text("ERROR: Not authorized! Contact @waffleboy for auth")
+    return
+
+def news_channel(bot,update):
+    if update.effective_user.id == 113756492: #auth check
+        text, press_release = get_daily_news_and_press()
+        if press_release:
+            send_press_release_to_channel(bot,press_release)
+        send_news_to_channel(bot,text)
+        return
+    update.message.reply_text("ERROR: Not authorized! Contact @waffleboy for auth")
+    return
 #==============================================================================
 #                           Recurring jobs
 #==============================================================================
@@ -214,6 +241,10 @@ def main():
     dp.add_handler(CommandHandler("help", helpme))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("news", news))
+    dp.add_handler(CommandHandler("press",press_only))
+    
+    dp.add_handler(CommandHandler("press_channel",press_channel))
+    dp.add_handler(CommandHandler("news_channel",news_channel))
     
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, standardReply()))

@@ -11,7 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 import pandas as pd
 import datetime
 from selenium.webdriver.chrome.options import Options  
@@ -24,6 +24,11 @@ default_url = "https://www.nea.gov.sg/media/news"
 def scrape(url = default_url, given_date = None, override = False):
     driver = load_driver()
     driver.get(url)
+    
+    # just wait till page load
+    element = WebDriverWait(driver, 10).until(
+    lambda x: x.find_element_by_class_name('col-md-4'))
+    
     first_entry = get_first_elem_of_table(driver)
     date_of_news = parse_date_and_identify(first_entry.text)
     if should_scrape(date_of_news, given_date) or override:
