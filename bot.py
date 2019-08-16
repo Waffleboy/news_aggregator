@@ -261,7 +261,7 @@ def main():
     if RUN_ONE_TIME_AGGREGATION:
         updater.bot.send_message(CHANNEL_ID,"Aggregation set to ON: Beginning one-time monthly news collation.\n")
         j.run_once(monthly_news,0)
-    news_job = j.run_daily(send_daily_news_to_channel, time = datetime.time(0))
+    news_job = j.run_daily(send_daily_news_to_channel, time = datetime.time(1))
 
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
