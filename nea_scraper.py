@@ -66,3 +66,5 @@ def parse_date_and_identify(text):
     parsed_date = datetime.datetime.strptime(date_filtered,'%d %b %Y')
     return parsed_date.date()
     
+def test_case():
+    return scrape(override=True)
